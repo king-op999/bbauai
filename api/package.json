@@ -1,0 +1,13 @@
+{
+  "name": "bronx-ai-v2",
+  "version": "2.0.0",
+  "description": "BRONX AI API - DeepSeek Powered",
+  "main": "api/index.js",
+  "scripts": {
+    "start": "node api/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "axios": "^1.7.0"
+  }
+}
