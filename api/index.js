@@ -1,307 +1,242 @@
-// api/index.js - BRONX DEEPSEEK AI API V2.0 - FULL FIXED
+// api/index.js - BRONX GROK AI API
 const express = require('express');
 const axios = require('axios');
 const app = express();
 
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || 'sk-cc0648772f124212a1da9bea08ac68ed';
-const DEEPSEEK_BASE_URL = 'https://api.deepseek.com';
+const GROK_API_KEY = process.env.GROK_API_KEY || 'xai-o4jrEElUlB1le8FcSR5zSSd8pGTz4gFRagcugn44cC4BByAxKbZ6zwWMfuCczgXmaaEjNlO6zGWBeQ4Z';
+const GROK_BASE_URL = 'https://api.x.ai/v1';
 
-// ========== MIDDLEWARE ==========
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.set('json spaces', 2);
-
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     if (req.method === 'OPTIONS') return res.status(200).end();
     next();
 });
 
-// ========== HOME PAGE (AI PLAYGROUND) ==========
+// ========== HOME PAGE ==========
 app.get('/', (req, res) => {
-    const serverUrl = `${req.protocol}://${req.get('host')}`;
-    res.send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>BRONX AI V2.0</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet"><style>
+    const url = `${req.protocol}://${req.get('host')}`;
+    res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>BRONX GROK AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet"><style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#000;color:#e0e0e0;font-family:'Rajdhani',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(139,0,255,.1),transparent 70%),radial-gradient(ellipse at 80% 100%,rgba(0,200,255,.06),transparent 50%);pointer-events:none;z-index:0}
-.container{max-width:850px;width:100%;position:relative;z-index:1}
-h1{font-family:'Orbitron',sans-serif;font-size:clamp(26px,5vw,44px);text-align:center;background:linear-gradient(90deg,#8b00ff,#00c8ff,#ff0080);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px;animation:glow 3s ease infinite;background-size:200% 200%}@keyframes glow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-.subtitle{text-align:center;color:#555;font-size:12px;letter-spacing:4px;margin-bottom:24px;text-transform:uppercase}
-.card{background:rgba(10,10,20,.85);border:1px solid rgba(139,0,255,.08);border-radius:20px;padding:22px;margin-bottom:16px;backdrop-filter:blur(30px)}
-.card h3{color:#8b00ff;font-size:14px;margin-bottom:12px;letter-spacing:2px;font-family:'Orbitron',sans-serif}
-.card p{color:#666;font-size:11px;margin:6px 0}
-code{display:block;background:rgba(0,0,0,.5);color:#00c8ff;padding:12px 16px;border-radius:12px;font-family:'Courier New',monospace;font-size:11px;margin:8px 0;word-break:break-all;border:1px solid rgba(0,200,255,.08)}
-.endpoint{color:#00ff88;font-weight:700;font-size:13px;margin:8px 0}
-.badge{display:inline-block;background:rgba(0,255,136,.06);color:#00ff88;padding:5px 14px;border-radius:20px;font-size:10px;font-weight:700;margin-bottom:12px;border:1px solid rgba(0,255,136,.12);letter-spacing:1px}
-.chat-area{display:flex;gap:8px;margin-top:12px}
-.chat-area input{flex:1;padding:15px 18px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.05);border-radius:14px;color:#fff;font-size:14px;outline:none;font-family:'Rajdhani',sans-serif;transition:.4s}
-.chat-area input:focus{border-color:#8b00ff;box-shadow:0 0 40px rgba(139,0,255,.15)}
-.chat-area button{padding:15px 26px;background:linear-gradient(135deg,#8b00ff,#5500cc,#00c8ff);background-size:200% 200%;color:#fff;border:none;border-radius:14px;font-weight:700;cursor:pointer;font-family:'Orbitron',sans-serif;letter-spacing:1px;transition:.4s;animation:btnGlow 3s ease infinite;font-size:13px}
-.chat-area button:hover{transform:translateY(-2px);box-shadow:0 0 50px rgba(139,0,255,.35)}@keyframes btnGlow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-.result-box{margin-top:16px;background:rgba(0,0,0,.5);border:1px solid rgba(0,255,136,.08);border-radius:14px;padding:18px;font-family:'Courier New',monospace;font-size:12px;color:#00ff88;max-height:400px;overflow:auto;display:none;white-space:pre-wrap;line-height:1.6}
-.result-box.error{color:#ff0080;border-color:rgba(255,0,128,.15)}
-.result-box.loading{color:#00c8ff}
-.quick-prompts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.quick-prompt{background:rgba(139,0,255,.05);color:#888;border:1px solid rgba(139,0,255,.1);padding:8px 14px;border-radius:20px;font-size:10px;cursor:pointer;transition:.3s;font-family:'Rajdhani',sans-serif}
-.quick-prompt:hover{background:rgba(139,0,255,.12);color:#fff;border-color:#8b00ff}
-.footer{text-align:center;margin-top:20px;color:#1a1a1a;font-size:10px;letter-spacing:3px}
-</style></head><body>
-<div class="container">
-<h1>BRONX AI V2.0</h1>
-<p class="subtitle">DeepSeek Powered · Spaces & Hindi OK</p>
-<div class="badge">✅ 24/7 ONLINE · ${serverUrl}</div>
-
-<div class="card">
-<h3>🤖 AI CHAT</h3>
-<div class="chat-area">
-<input type="text" id="aiInput" placeholder="Kuch bhi pucho... (Spaces, Hindi, English sab chalega)" onkeypress="if(event.key==='Enter')askAI()">
-<button onclick="askAI()">⚡ ASK</button>
-</div>
-<div class="quick-prompts">
-<span class="quick-prompt" onclick="quickAsk('Hallo bhai kasa ho?')">👋 Hallo</span>
-<span class="quick-prompt" onclick="quickAsk('Mera naam Rahul hai')">🙋‍♂️ Intro</span>
-<span class="quick-prompt" onclick="quickAsk('Python code for fibonacci series')">💻 Code</span>
-<span class="quick-prompt" onclick="quickAsk('What is OSINT?')">🔍 OSINT</span>
-<span class="quick-prompt" onclick="quickAsk('Write a short poem')">📝 Poem</span>
-<span class="quick-prompt" onclick="quickAsk('Mujhe ek joke sunao')">😂 Joke</span>
-</div>
-<div class="result-box" id="result"></div>
-</div>
-
-<div class="card">
-<h3>📡 API ENDPOINTS</h3>
-<p class="endpoint">🔗 GET /ai?reply=YOUR_QUESTION</p>
-<code>${serverUrl}/ai?reply=Hallo bhai kasa ho</code>
-<p style="margin-top:8px">✅ Spaces, Hindi, Emojis - sab support!</p>
-<p class="endpoint" style="margin-top:12px">🔗 POST /ai</p>
-<code>curl -X POST ${serverUrl}/ai -H "Content-Type: application/json" -d '{"reply":"Hallo bhai"}'</code>
-</div>
-
-<div class="card">
-<h3>📋 SAMPLE RESPONSE</h3>
-<code>{
-  "success": true,
-  "query": "Hallo bhai kasa ho",
-  "reply": "Hello bhai! Main theek hoon...",
-  "model": "deepseek-chat",
-  "powered_by": "BRONX_AI_V2"
-}</code>
-</div>
-</div>
-<p class="footer">BRONX AI V2.0 · DeepSeek · Render</p>
-<script>
-function quickAsk(q){
-    document.getElementById('aiInput').value=q;
-    askAI();
-}
-async function askAI(){
-    var q=document.getElementById('aiInput').value.trim();
-    var r=document.getElementById('result');
-    if(!q){r.style.display='block';r.className='result-box error';r.textContent='❌ Please enter a question!';return}
-    r.style.display='block';
-    r.className='result-box loading';
-    r.textContent='🤔 Thinking...';
-    try{
-        var resp=await fetch('/ai?reply='+encodeURIComponent(q));
-        var data=await resp.json();
-        if(data.success){
-            r.className='result-box';
-            r.textContent=data.reply;
-        }else{
-            r.className='result-box error';
-            r.textContent='❌ '+ (data.error||'Unknown error');
-        }
-    }catch(e){
-        r.className='result-box error';
-        r.textContent='❌ Connection error: '+e.message;
-    }
-}
+body{background:#000;color:#fff;font-family:'Rajdhani',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,150,255,.1),transparent 70%);pointer-events:none;z-index:0}
+.card{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:24px;padding:35px;max-width:700px;width:100%;text-align:center;position:relative;z-index:1}
+h1{font-family:'Orbitron',sans-serif;font-size:38px;background:linear-gradient(90deg,#0096ff,#00d4ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+.badge{display:inline-block;background:rgba(0,150,255,.1);color:#0096ff;padding:5px 16px;border-radius:20px;font-size:11px;letter-spacing:2px;margin-bottom:20px;border:1px solid rgba(0,150,255,.2)}
+.row{display:flex;gap:8px;margin:16px 0}
+.row input{flex:1;padding:15px;background:#000;border:1px solid #222;border-radius:14px;color:#fff;font-size:14px;outline:none;font-family:'Rajdhani',sans-serif}
+.row input:focus{border-color:#0096ff;box-shadow:0 0 30px rgba(0,150,255,.1)}
+.row button{padding:15px 28px;background:linear-gradient(135deg,#0096ff,#0066cc);color:#fff;border:none;border-radius:14px;font-weight:700;cursor:pointer;font-family:'Orbitron',sans-serif;letter-spacing:1px;transition:.3s}
+.row button:hover{transform:translateY(-2px);box-shadow:0 0 40px rgba(0,150,255,.3)}
+.result{background:#000;border:1px solid #1a1a1a;border-radius:14px;padding:18px;margin-top:12px;text-align:left;font-size:13px;color:#00d4ff;max-height:350px;overflow:auto;display:none;white-space:pre-wrap;line-height:1.7}
+code{background:#111;color:#0096ff;padding:10px;border-radius:10px;display:block;font-size:10px;margin:8px 0;word-break:break-all}
+</style></head><body><div class="card">
+<h1>🤖 BRONX GROK</h1><p class="badge">X.AI · Grok 4.3 · Elon Musk</p>
+<div class="row"><input type="text" id="q" placeholder="Ask Grok anything..." onkeypress="if(event.key==='Enter')ask()"><button onclick="ask()">⚡ ASK</button></div>
+<div class="result" id="r"></div>
+<code>${url}/ai?reply=YOUR_QUESTION</code>
+</div><script>
+async function ask(){var q=document.getElementById('q').value.trim();var r=document.getElementById('r');if(!q)return;r.style.display='block';r.style.color='#888';r.textContent='🤔 Grok is thinking...';try{var resp=await fetch('/ai?reply='+encodeURIComponent(q));var d=await resp.json();r.style.color=d.success?'#00d4ff':'#ff4444';r.textContent=d.reply||d.error}catch(e){r.style.color='#ff4444';r.textContent='Error: '+e.message}}
 </script></body></html>`);
 });
 
-// ========== AI API - GET (URL Parameters - Spaces Support) ==========
+// ========== GROK AI API ==========
 app.get('/ai', async (req, res) => {
     try {
-        // Get query from any parameter name
-        let query = req.query.reply || req.query.q || req.query.ask || req.query.text || req.query.question || '';
-        
-        // Already decoded by Express, but just in case
-        if (typeof query === 'string') {
-            query = query.trim();
-        }
+        let query = req.query.reply || req.query.q || req.query.ask || req.query.text || '';
+        query = query.trim();
         
         if (!query) {
-            return res.json({
-                success: false,
-                error: '❌ Missing query! Use: /ai?reply=YOUR QUESTION HERE',
-                examples: [
-                    '/ai?reply=Hallo bhai kasa ho',
-                    '/ai?reply=What is AI?',
-                    '/ai?reply=Mera naam Rahul hai'
-                ]
+            return res.json({ 
+                success: false, 
+                error: 'Missing query. Use: /ai?reply=YOUR QUESTION' 
             });
         }
 
-        console.log(`📝 [GET] Query: "${query.substring(0, 150)}"`);
-        
-        // Call DeepSeek API
-        const aiResponse = await callDeepSeek(query);
-        
-        res.json({
-            success: true,
-            query: query,
-            reply: aiResponse.reply,
-            model: aiResponse.model,
-            usage: aiResponse.usage,
-            response_time_ms: aiResponse.time,
-            powered_by: 'BRONX_AI_V2'
-        });
+        console.log(`🤖 Grok Query: "${query.substring(0, 150)}"`);
+
+        // Call Grok API
+        const response = await axios.post(
+            `${GROK_BASE_URL}/responses`,
+            {
+                model: 'grok-4.3',
+                input: [
+                    {
+                        role: 'system',
+                        content: 'You are Grok, a highly intelligent AI assistant created by xAI. Answer clearly and helpfully.'
+                    },
+                    {
+                        role: 'user',
+                        content: query
+                    }
+                ],
+                max_tokens: 4000,
+                temperature: 0.8
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${GROK_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                timeout: 90000
+            }
+        );
+
+        if (response.data?.output) {
+            const reply = response.data.output;
+            
+            console.log(`✅ Grok replied: "${reply.substring(0, 100)}..."`);
+
+            res.json({
+                success: true,
+                query: query,
+                reply: reply,
+                model: response.data.model || 'grok-4.3',
+                usage: response.data.usage || {},
+                powered_by: 'BRONX_GROK_XAI'
+            });
+        } else {
+            res.json({
+                success: false,
+                error: 'No response from Grok',
+                raw: response.data
+            });
+        }
 
     } catch (e) {
-        console.error('❌ AI GET Error:', e.message);
+        console.error('❌ Grok Error:', e.response?.data || e.message);
+        
         res.status(500).json({
             success: false,
-            error: 'AI request failed: ' + (e.response?.data?.error?.message || e.message),
+            error: 'Grok API error: ' + (e.response?.data?.error?.message || e.message),
             query: req.query.reply || ''
         });
     }
 });
 
-// ========== AI API - POST (JSON Body - For Long Questions) ==========
+// ========== POST METHOD ==========
 app.post('/ai', async (req, res) => {
     try {
-        let query = req.body.reply || req.body.q || req.body.ask || req.body.text || req.body.question || '';
-        
-        if (typeof query === 'string') {
-            query = query.trim();
-        }
+        let query = req.body.reply || req.body.q || req.body.ask || req.body.text || '';
+        query = query.trim();
         
         if (!query) {
-            return res.json({
-                success: false,
-                error: '❌ Missing query in body! Send JSON: {"reply": "Your question"}'
-            });
+            return res.json({ success: false, error: 'Missing query in body' });
         }
 
-        console.log(`📝 [POST] Query: "${query.substring(0, 150)}"`);
-        
-        const aiResponse = await callDeepSeek(query);
-        
+        const response = await axios.post(
+            `${GROK_BASE_URL}/responses`,
+            {
+                model: 'grok-4.3',
+                input: [
+                    { role: 'system', content: 'You are Grok, a helpful AI assistant.' },
+                    { role: 'user', content: query }
+                ],
+                max_tokens: 4000,
+                temperature: 0.8
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${GROK_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                timeout: 90000
+            }
+        );
+
         res.json({
             success: true,
             query: query,
-            reply: aiResponse.reply,
-            model: aiResponse.model,
-            usage: aiResponse.usage,
-            response_time_ms: aiResponse.time,
-            powered_by: 'BRONX_AI_V2'
+            reply: response.data.output,
+            model: response.data.model || 'grok-4.3',
+            powered_by: 'BRONX_GROK_XAI'
         });
 
     } catch (e) {
-        console.error('❌ AI POST Error:', e.message);
         res.status(500).json({
             success: false,
-            error: 'AI request failed: ' + (e.response?.data?.error?.message || e.message)
+            error: 'Grok API error: ' + (e.response?.data?.error?.message || e.message)
         });
     }
 });
 
-// ========== DEEPSEEK API CALL ==========
-async function callDeepSeek(query) {
-    const startTime = Date.now();
-    
-    const response = await axios.post(
-        `${DEEPSEEK_BASE_URL}/chat/completions`,
-        {
-            model: "deepseek-chat",
-            messages: [
-                {
-                    role: "system",
-                    content: "You are BRONX AI, a helpful, friendly, and knowledgeable assistant. Answer in the same language as the user's question. Keep responses clear and helpful. If the user speaks Hindi, reply in Hindi. If English, reply in English. Be concise but thorough."
-                },
-                {
-                    role: "user",
-                    content: query
-                }
-            ],
-            stream: false,
-            max_tokens: 4000,
-            temperature: 0.8,
-            top_p: 0.9
-        },
-        {
-            headers: {
-                'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            timeout: 90000 // 90 seconds
+// ========== CHAT HISTORY (Multi-turn) ==========
+app.post('/chat', async (req, res) => {
+    try {
+        const messages = req.body.messages || [];
+        
+        if (!messages.length) {
+            return res.json({ success: false, error: 'Missing messages array' });
         }
-    );
 
-    const endTime = Date.now();
-    
-    if (response.data?.choices?.length > 0) {
-        return {
-            reply: response.data.choices[0].message.content,
-            model: response.data.model || 'deepseek-chat',
-            usage: response.data.usage || {},
-            time: endTime - startTime
-        };
-    } else {
-        throw new Error('No response from DeepSeek API');
+        const input = [
+            { role: 'system', content: 'You are Grok, a helpful AI assistant.' },
+            ...messages
+        ];
+
+        const response = await axios.post(
+            `${GROK_BASE_URL}/responses`,
+            {
+                model: 'grok-4.3',
+                input: input,
+                max_tokens: 4000,
+                temperature: 0.8
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${GROK_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                timeout: 90000
+            }
+        );
+
+        res.json({
+            success: true,
+            reply: response.data.output,
+            model: response.data.model || 'grok-4.3',
+            powered_by: 'BRONX_GROK_XAI'
+        });
+
+    } catch (e) {
+        res.status(500).json({
+            success: false,
+            error: e.response?.data?.error?.message || e.message
+        });
     }
-}
+});
 
 // ========== HEALTH CHECK ==========
 app.get('/test', (req, res) => {
-    const serverUrl = `${req.protocol}://${req.get('host')}`;
+    const url = `${req.protocol}://${req.get('host')}`;
     res.json({
-        status: '✅ BRONX AI V2.0 ONLINE',
-        model: 'deepseek-chat',
+        status: '✅ BRONX GROK AI ONLINE',
+        model: 'grok-4.3',
+        provider: 'X.AI (Elon Musk)',
         endpoints: {
-            get: `${serverUrl}/ai?reply=YOUR_QUESTION`,
-            post: `${serverUrl}/ai (JSON body)`,
-            playground: serverUrl
+            get: `${url}/ai?reply=Hello`,
+            post: `${url}/ai (JSON body)`,
+            chat: `${url}/chat (Multi-turn)`,
+            home: url
         },
-        features: [
-            '✅ Spaces in questions',
-            '✅ Hindi language support',
-            '✅ Emoji support',
-            '✅ GET & POST methods',
-            '✅ Long questions supported',
-            '✅ Auto language detection'
-        ],
-        powered_by: 'BRONX_AI_V2'
+        powered_by: 'BRONX_GROK_XAI'
     });
 });
 
-// ========== 404 ==========
-app.use((req, res) => {
-    res.status(404).json({
-        error: 'Route not found',
-        usage: {
-            get: '/ai?reply=YOUR QUESTION',
-            post: 'POST /ai with JSON body',
-            test: '/test',
-            home: '/'
-        }
-    });
-});
-
-// ========== START SERVER (FIXED) ==========
+// ========== START ==========
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🤖 BRONX AI V2.0 ONLINE!');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🤖 BRONX GROK AI ONLINE!');
     console.log(`🚀 PORT: ${PORT}`);
-    console.log(`🧠 Model: DeepSeek Chat`);
-    console.log(`✅ Spaces/Hindi/Emoji Supported`);
-    console.log(`🔗 GET  /ai?reply=YOUR_QUESTION`);
+    console.log(`🧠 Model: Grok 4.3 (X.AI)`);
+    console.log(`👑 Powered by: Elon Musk's X.AI`);
+    console.log(`🔗 GET  /ai?reply=Hello`);
     console.log(`🔗 POST /ai  (JSON body)`);
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log(`🔗 POST /chat (Multi-turn)`);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━');
 });
 
 module.exports = app;
