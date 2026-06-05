@@ -291,9 +291,9 @@ app.use((req, res) => {
     });
 });
 
-// ========== START SERVER ==========
+// ========== START SERVER (FIXED) ==========
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('🤖 BRONX AI V2.0 ONLINE!');
     console.log(`🚀 PORT: ${PORT}`);
