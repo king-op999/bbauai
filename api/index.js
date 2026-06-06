@@ -5,7 +5,7 @@ const app = express();
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY || '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';
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const GROQ_MODEL = 'llama3-70b-8192';
+const GROQ_MODEL = 'llama-3.2-90b-vision-preview';
 
 app.use(express.json({ limit: '10mb' }));
 app.set('json spaces', 2);
