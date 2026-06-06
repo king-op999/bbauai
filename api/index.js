@@ -1,23 +1,14 @@
-// api/index.js - BRONX GROQ AI (NEW API - /responses)
+// api/index.js - BRONX GROQ AI (PROPER TEXT EXTRACTION)
 const express = require('express');
 const axios = require('axios');
 const app = express();
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY || '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';
-
-// 🔥 NEW GROQ API URL (responses endpoint)
 const GROQ_URL = 'https://api.groq.com/openai/v1/responses';
 
-// Working models
 const MODELS = {
     default: 'openai/gpt-oss-20b',
-    list: [
-        { id: 'openai/gpt-oss-20b', name: 'GPT-OSS 20B' },
-        { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B' },
-        { id: 'deepseek-r1-distill-llama-70b', name: 'DeepSeek R1 70B' },
-        { id: 'qwen-2.5-32b', name: 'Qwen 2.5 32B' },
-        { id: 'llama-3.2-11b-vision-preview', name: 'Llama 3.2 11B' }
-    ]
+    list: ['openai/gpt-oss-20b', 'llama-3.3-70b-versatile', 'deepseek-r1-distill-llama-70b', 'qwen-2.5-32b']
 };
 
 app.use(express.json({ limit: '10mb' }));
@@ -31,206 +22,210 @@ app.use((req, res, next) => {
 // ========== HOME PAGE ==========
 app.get('/', (req, res) => {
     const url = `${req.protocol}://${req.get('host')}`;
-    res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>BRONX GROQ AI</title>
+    res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>BRONX GROQ</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet"><style>
 *{margin:0;padding:0;box-sizing:border-box}body{background:#000;color:#fff;font-family:'Rajdhani',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(245,80,0,.1),transparent 70%);pointer-events:none;z-index:0}
-.card{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:24px;padding:30px;max-width:750px;width:100%;text-align:center;position:relative;z-index:1}
+.card{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:24px;padding:30px;max-width:700px;width:100%;text-align:center}
 h1{font-family:'Orbitron',sans-serif;font-size:36px;background:linear-gradient(90deg,#f55000,#ff8c00);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.badge{display:inline-block;background:rgba(245,80,0,.1);color:#f55000;padding:4px 14px;border-radius:20px;font-size:10px;letter-spacing:2px;margin:8px 0 16px;border:1px solid rgba(245,80,0,.2)}
-.models{display:flex;gap:6px;justify-content:center;margin:12px 0;flex-wrap:wrap}
-.model-btn{background:#111;border:1px solid #222;color:#888;padding:7px 12px;border-radius:8px;font-size:9px;cursor:pointer;transition:.3s;font-family:'Rajdhani',sans-serif}
-.model-btn:hover{border-color:#f55000;color:#f55000}
-.model-btn.active{background:rgba(245,80,0,.1);border-color:#f55000;color:#f55000}
+.badge{color:#00ff88;font-size:11px;margin:8px 0 20px;letter-spacing:2px}
 .row{display:flex;gap:8px;margin:16px 0}
 .row input{flex:1;padding:14px;background:#000;border:1px solid #222;border-radius:14px;color:#fff;font-size:14px;outline:none;font-family:'Rajdhani',sans-serif}
 .row input:focus{border-color:#f55000}
-.row button{padding:14px 26px;background:linear-gradient(135deg,#f55000,#ff8c00);color:#fff;border:none;border-radius:14px;font-weight:700;cursor:pointer;font-family:'Orbitron',sans-serif;transition:.3s}
-.row button:hover{transform:translateY(-2px);box-shadow:0 0 40px rgba(245,80,0,.3)}
+.row button{padding:14px 26px;background:#f55000;color:#fff;border:none;border-radius:14px;font-weight:700;cursor:pointer;font-family:'Orbitron',sans-serif}
 .result{background:#000;border:1px solid #1a1a1a;border-radius:14px;padding:18px;margin-top:12px;text-align:left;font-size:13px;color:#ff8c00;max-height:350px;overflow:auto;display:none;white-space:pre-wrap;line-height:1.7}
 code{background:#111;color:#f55000;padding:10px;border-radius:10px;display:block;font-size:10px;margin:8px 0;word-break:break-all}
 </style></head><body><div class="card">
-<h1>⚡ BRONX GROQ AI</h1><p class="badge">New API · Working</p>
-<div class="models">
-${MODELS.list.map(m => `<span class="model-btn ${m.id===MODELS.default?'active':''}" onclick="selectModel('${m.id}')">${m.name}</span>`).join('')}
-</div>
-<div class="row"><input type="text" id="q" placeholder="Kuch bhi pucho..." onkeypress="if(event.key==='Enter')ask()"><button onclick="ask()">⚡ ASK</button></div>
+<h1>⚡ BRONX GROQ AI</h1><p class="badge">✅ Working 100%</p>
+<div class="row"><input type="text" id="q" placeholder="Kuch bhi pucho..." onkeypress="if(event.key==='Enter')ask()"><button onclick="ask()">ASK</button></div>
 <div class="result" id="r"></div>
 <code>${url}/ai?reply=Hello</code>
 </div><script>
-var model='${MODELS.default}';
-function selectModel(m){model=m;document.querySelectorAll('.model-btn').forEach(b=>b.classList.remove('active'));event.target.classList.add('active')}
-async function ask(){var q=document.getElementById('q').value.trim();var r=document.getElementById('r');if(!q)return;r.style.display='block';r.style.color='#888';r.textContent='⚡ Thinking...';try{var resp=await fetch('/ai?reply='+encodeURIComponent(q)+'&model='+model);var d=await resp.json();r.style.color=d.success?'#ff8c00':'#ff4444';r.textContent=d.reply||d.error||'No response'}catch(e){r.style.color='#ff4444';r.textContent='Error: '+e.message}}
+async function ask(){var q=document.getElementById('q').value.trim();var r=document.getElementById('r');if(!q)return;r.style.display='block';r.style.color='#888';r.textContent='⚡ Thinking...';try{var resp=await fetch('/ai?reply='+encodeURIComponent(q));var d=await resp.json();r.style.color=d.success?'#ff8c00':'#ff4444';r.textContent=d.reply||d.error}catch(e){r.textContent='Error: '+e.message}}
 </script></body></html>`);
 });
 
-// ========== AI API (NEW RESPONSES ENDPOINT) ==========
+// ========== 🔥 TEXT EXTRACTION HELPER ==========
+function extractText(data) {
+    // Case 1: Direct string
+    if (typeof data === 'string') return data;
+    
+    // Case 2: output_text field
+    if (data.output_text) return data.output_text;
+    
+    // Case 3: output is array (new Grok format)
+    if (Array.isArray(data.output)) {
+        for (const item of data.output) {
+            if (item.type === 'message' && item.content) {
+                for (const content of item.content) {
+                    if (content.type === 'output_text' && content.text) {
+                        return content.text;
+                    }
+                }
+            }
+        }
+    }
+    
+    // Case 4: reply is array (from our response)
+    if (Array.isArray(data.reply) || Array.isArray(data)) {
+        const arr = Array.isArray(data) ? data : data.reply;
+        for (const item of arr) {
+            if (item.type === 'message' && item.content) {
+                for (const content of item.content) {
+                    if (content.type === 'output_text' && content.text) {
+                        return content.text;
+                    }
+                }
+            }
+        }
+    }
+    
+    // Case 5: choices array (old format)
+    if (data.choices?.[0]?.message?.content) {
+        return data.choices[0].message.content;
+    }
+    
+    // Case 6: text field
+    if (data.text) return data.text;
+    
+    // Case 7: output field (string)
+    if (typeof data.output === 'string') return data.output;
+    
+    // Case 8: content field
+    if (data.content) return data.content;
+    
+    // Fallback
+    return null;
+}
+
+// ========== AI API ==========
 app.get('/ai', async (req, res) => {
     try {
-        let query = req.query.reply || req.query.q || req.query.ask || req.query.text || '';
+        let query = req.query.reply || req.query.q || req.query.ask || '';
         let model = req.query.model || MODELS.default;
         query = query.trim();
         
-        if (!query) {
-            return res.json({ success: false, error: 'Missing query. Use: /ai?reply=Hello' });
-        }
+        if (!query) return res.json({ success: false, error: 'Missing query' });
 
-        console.log(`⚡ [${model}] "${query.substring(0, 100)}"`);
+        console.log(`⚡ [${model}] "${query.substring(0, 80)}"`);
 
         const start = Date.now();
+        let reply = null;
 
-        // 🔥 NEW GROK API - /responses endpoint
-        const response = await axios.post(
-            GROQ_URL,
-            {
+        // 🔥 Try New Responses API
+        try {
+            const resp = await axios.post(GROQ_URL, {
                 model: model,
                 input: query
-            },
-            {
+            }, {
                 headers: {
                     'Authorization': `Bearer ${GROQ_API_KEY}`,
                     'Content-Type': 'application/json'
                 },
                 timeout: 60000
+            });
+
+            const data = resp.data;
+            
+            // 🔥 Extract actual text from nested response
+            reply = extractText(data);
+            
+            if (reply) {
+                console.log(`✅ Text extracted: "${reply.substring(0, 80)}..."`);
+            } else {
+                console.log('⚠️ Could not extract text, raw:', JSON.stringify(data).substring(0, 200));
             }
-        );
+
+        } catch (e) {
+            console.log('New API failed:', e.response?.status);
+        }
+
+        // 🔥 Fallback: Old Chat API
+        if (!reply) {
+            try {
+                const resp = await axios.post(
+                    'https://api.groq.com/openai/v1/chat/completions',
+                    {
+                        model: model,
+                        messages: [
+                            { role: 'system', content: 'Reply in same language as user.' },
+                            { role: 'user', content: query }
+                        ],
+                        max_tokens: 4000
+                    },
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${GROQ_API_KEY}`,
+                            'Content-Type': 'application/json'
+                        },
+                        timeout: 30000
+                    }
+                );
+                
+                reply = resp.data?.choices?.[0]?.message?.content;
+                if (reply) console.log('✅ Fallback success');
+            } catch (e) {
+                console.log('Fallback failed');
+            }
+        }
 
         const time = Date.now() - start;
 
-        console.log('✅ Response:', JSON.stringify(response.data).substring(0, 200));
-
-        // New API response format
-        let reply = response.data.output_text || 
-                    response.data.output || 
-                    response.data.choices?.[0]?.message?.content ||
-                    response.data.choices?.[0]?.text ||
-                    'No response';
-
-        res.json({
-            success: true,
-            query: query,
-            reply: reply,
-            model: response.data.model || model,
-            time: `${time}ms`,
-            raw: response.data,
-            powered_by: 'BRONX_GROQ_AI'
-        });
-
-    } catch (e) {
-        console.error('❌ Error:', e.response?.data || e.message);
-        
-        // 🔥 Try fallback to old API
-        try {
-            console.log('🔄 Trying fallback chat/completions...');
-            
-            const fallback = await axios.post(
-                'https://api.groq.com/openai/v1/chat/completions',
-                {
-                    model: req.query.model || MODELS.default,
-                    messages: [
-                        { role: 'system', content: 'You are a helpful assistant.' },
-                        { role: 'user', content: req.query.reply || req.query.q }
-                    ],
-                    max_tokens: 4000
-                },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${GROQ_API_KEY}`,
-                        'Content-Type': 'application/json'
-                    },
-                    timeout: 30000
-                }
-            );
-            
+        if (reply && typeof reply === 'string' && reply.length > 2) {
             res.json({
                 success: true,
-                query: req.query.reply || req.query.q,
-                reply: fallback.data.choices[0].message.content,
-                model: fallback.data.model,
-                method: 'fallback',
+                query: query,
+                reply: reply,
+                model: model,
+                time: `${time}ms`,
                 powered_by: 'BRONX_GROQ_AI'
             });
-            
-        } catch (fallbackError) {
-            res.status(500).json({
+        } else {
+            res.json({
                 success: false,
-                error: e.response?.data?.error?.message || e.message,
-                fallback_error: fallbackError.response?.data?.error?.message
-            });
-        }
-    }
-});
-
-// ========== POST METHOD ==========
-app.post('/ai', async (req, res) => {
-    try {
-        let query = req.body.reply || req.body.q || req.body.ask || req.body.input || req.body.text || '';
-        let model = req.body.model || MODELS.default;
-        query = query.trim();
-        
-        if (!query) return res.json({ success: false, error: 'Missing query' });
-
-        // Try new API first
-        try {
-            const response = await axios.post(
-                GROQ_URL,
-                {
-                    model: model,
-                    input: query
-                },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${GROQ_API_KEY}`,
-                        'Content-Type': 'application/json'
-                    },
-                    timeout: 60000
-                }
-            );
-
-            res.json({
-                success: true,
-                reply: response.data.output_text || response.data.output,
-                model: model,
-                powered_by: 'BRONX_GROQ_AI'
-            });
-        } catch {
-            // Fallback
-            const response = await axios.post(
-                'https://api.groq.com/openai/v1/chat/completions',
-                {
-                    model: model,
-                    messages: [{ role: 'user', content: query }],
-                    max_tokens: 4000
-                },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${GROQ_API_KEY}`,
-                        'Content-Type': 'application/json'
-                    },
-                    timeout: 30000
-                }
-            );
-
-            res.json({
-                success: true,
-                reply: response.data.choices[0].message.content,
-                model: model,
-                method: 'fallback',
-                powered_by: 'BRONX_GROQ_AI'
+                error: 'Could not extract reply. Try again.',
+                extracted: reply
             });
         }
 
     } catch (e) {
         res.status(500).json({
             success: false,
-            error: e.response?.data?.error?.message || e.message
+            error: e.message || 'AI request failed'
         });
     }
 });
 
-// ========== MODELS ==========
-app.get('/models', (req, res) => {
-    res.json({ success: true, models: MODELS.list, default: MODELS.default });
+// ========== POST ==========
+app.post('/ai', async (req, res) => {
+    try {
+        let query = req.body.reply || req.body.q || req.body.ask || '';
+        let model = req.body.model || MODELS.default;
+        query = query.trim();
+        if (!query) return res.json({ success: false, error: 'Missing query' });
+
+        const resp = await axios.post(GROQ_URL, {
+            model: model,
+            input: query
+        }, {
+            headers: {
+                'Authorization': `Bearer ${GROQ_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            timeout: 60000
+        });
+
+        const reply = extractText(resp.data);
+
+        res.json({
+            success: true,
+            reply: reply || 'No text extracted',
+            model: model,
+            powered_by: 'BRONX_GROQ_AI'
+        });
+
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
 });
 
 // ========== START ==========
