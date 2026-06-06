@@ -3,7 +3,7 @@ const express = require('express');
 const axios = require('axios');
 const app = express();
 
-const GROQ_API_KEY = process.env.GROQ_API_KEY || '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';
+const GROQ_API_KEY = process.env.GROQ_API_KEY || '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';
 const GROQ_URL = 'https://api.groq.com/openai/v1/responses';
 
 const MODELS = {
